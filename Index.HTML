@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Schedule</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        /* Desktop Hover Effects */
+        @media (min-width: 768px) {
+            .day-card {
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+            .day-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            }
+            .current-day-desktop {
+                border: 2px solid #3b82f6;
+                background-color: #eff6ff;
+            }
+            .current-day-desktop .day-header {
+                color: #1d4ed8;
+            }
+        }
+
+        /* Mobile Tab Styles */
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+        .tab-active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
+        }
+        .tab-inactive {
+            background-color: white;
+            color: #4b5563;
+            border-color: #e5e7eb;
+        }
+    </style>
+</head>
+<body class="text-gray-800 min-h-screen flex flex-col overflow-hidden md:overflow-auto">
+
+    <div class="max-w-7xl mx-auto px-0 md:px-6 lg:px-8 py-0 md:py-6 w-full flex-grow flex flex-col h-screen md:h-auto">
+        
+        <!-- Header -->
+        <div class="text-center pt-6 pb-2 px-4 md:mb-10 flex-shrink-0 bg-[#f3f4f6] z-20">
+            <h1 class="text-2xl md:text-4xl font-bold text-gray-900 mb-2">Weekly Schedule</h1>
+            <div class="inline-flex items-center bg-white px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-sm border border-gray-200 text-sm md:text-base">
+                <i class="fas fa-book-open text-blue-500 mr-2"></i>
+                <span class="font-semibold text-gray-700">Daily:</span>
+                <span class="ml-1 text-gray-600">Read Bible 15 min</span>
+            </div>
+        </div>
+
+        <!-- Mobile Tab Navigation -->
+        <div class="md:hidden sticky top-0 z-30 bg-[#f3f4f6] pt-2 pb-2 shadow-sm md:shadow-none flex-shrink-0">
+            <div class="flex space-x-3 overflow-x-auto no-scrollbar px-4 snap-x" id="tab-container">
+                <button onclick="scrollToDay('sunday')" id="tab-sunday" class="tab-btn whitespace-nowrap px-5 py-2 rounded-full border text-sm font-medium shadow-sm snap-start">Sun</button>
+                <button onclick="scrollToDay('monday')" id="tab-monday" class="tab-btn whitespace-nowrap px-5 py-2 rounded-full border text-sm font-medium shadow-sm snap-start">Mon</button>
+                <button onclick="scrollToDay('tuesday')" id="tab-tuesday" class="tab-btn whitespace-nowrap px-5 py-2 rounded-full border text-sm font-medium shadow-sm snap-start">Tue</button>
+                <button onclick="scrollToDay('wednesday')" id="tab-wednesday" class="tab-btn whitespace-nowrap px-5 py-2 rounded-full border text-sm font-medium shadow-sm snap-start">Wed</button>
+                <button onclick="scrollToDay('thursday')" id="tab-thursday" class="tab-btn whitespace-nowrap px-5 py-2 rounded-full border text-sm font-medium shadow-sm snap-start">Thu</button>
+                <button onclick="scrollToDay('friday')" id="tab-friday" class="tab-btn whitespace-nowrap px-5 py-2 rounded-full border text-sm font-medium shadow-sm snap-start">Fri</button>
+                <button onclick="scrollToDay('saturday')" id="tab-saturday" class="tab-btn whitespace-nowrap px-5 py-2 rounded-full border text-sm font-medium shadow-sm snap-start">Sat</button>
+            </div>
+        </div>
+
+        <!-- Schedule Container -->
+        <!-- Mobile: Horizontal Scroll Snap | Desktop: Grid -->
+        <div id="schedule-container" class="
+            flex-grow 
+            flex md:grid 
+            flex-row md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 
+            overflow-x-auto md:overflow-visible 
+            snap-x snap-mandatory 
+            gap-4 md:gap-6 
+            px-4 pb-20 md:pb-10 pt-4
+            no-scrollbar
+        ">
+        <!-- Note: scroll-smooth removed from container to allow instant jump for infinite loop -->
+
+            <!-- Clone: Saturday (Hidden on Desktop) -->
+            <div id="saturday-clone" class="day-card md:hidden flex-shrink-0 w-full snap-center bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h2 class="day-header text-xl font-bold text-gray-800">Saturday</h2>
+                </div>
+                <div class="p-5 flex-grow space-y-4 overflow-y-auto">
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-blue-600 w-16 pt-1">5:00 AM</span>
+                        <div class="text-sm">Talk Preparation</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-blue-600 w-16 pt-1">6:00 AM</span>
+                        <div class="text-sm">Write letter to Hudson</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-purple-600 w-16 pt-1">7:00 AM</span>
+                        <div class="text-sm font-medium text-purple-700">Family Text</div>
+                    </div>
+                    <div class="flex items-start mt-4">
+                        <span class="font-mono text-xs md:text-sm font-bold text-orange-500 w-16 pt-1">9:00 AM</span>
+                        <div class="text-sm bg-orange-50 text-orange-800 px-3 py-2 rounded-lg w-full border border-orange-100">
+                            <i class="fas fa-walking mr-1 opacity-75"></i> Service (until 1:00)
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-100 pt-3 mt-4">
+                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Flexible</div>
+                        <div class="text-sm text-gray-700">Talk Study</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sunday -->
+            <div id="sunday" class="day-card flex-shrink-0 w-full md:w-auto snap-center bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full md:h-auto">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h2 class="day-header text-xl font-bold text-gray-800">Sunday</h2>
+                </div>
+                <div class="p-5 flex-grow space-y-4 overflow-y-auto">
+                   <div class="flex items-start pt-8 pb-4 justify-center text-gray-400 italic text-sm">
+                        No morning schedule
+                   </div>
+                    <div class="border-t border-dashed border-gray-200 pt-3 mt-2">
+                        <div class="flex items-start">
+                            <span class="font-mono text-xs md:text-sm font-bold text-indigo-600 w-16 pt-1">1:00 PM</span>
+                            <div class="text-sm font-bold text-indigo-700 bg-indigo-50 px-3 py-2 rounded-lg w-full border border-indigo-100">
+                                Congregation Meeting
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-100 pt-3 mt-4">
+                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Flexible</div>
+                        <div class="text-sm text-gray-700">Personal Study (AH HA!)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monday -->
+            <div id="monday" class="day-card flex-shrink-0 w-full md:w-auto snap-center bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full md:h-auto">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h2 class="day-header text-xl font-bold text-gray-800">Monday</h2>
+                </div>
+                <div class="p-5 flex-grow space-y-4 overflow-y-auto">
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-blue-600 w-16 pt-1">5:00 AM</span>
+                        <div class="text-sm">Study Prep for Personal Studies</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-blue-600 w-16 pt-1">6:00 AM</span>
+                        <div class="text-sm">Jessica's Study</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-purple-600 w-16 pt-1">7:00 AM</span>
+                        <div class="text-sm font-medium text-purple-700">Family Text</div>
+                    </div>
+                    <div class="flex items-start group">
+                        <span class="font-mono text-xs md:text-sm font-bold text-gray-400 w-16 pt-1">7:30 AM</span>
+                        <div class="text-sm bg-gray-50 group-hover:bg-gray-100 transition-colors rounded px-3 py-1.5 w-full border-l-4 border-gray-300">
+                            Start Work
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-gray-400 w-16 pt-1">5:00 PM</span>
+                        <div class="text-sm text-gray-500 italic">End Work</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tuesday -->
+            <div id="tuesday" class="day-card flex-shrink-0 w-full md:w-auto snap-center bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full md:h-auto">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h2 class="day-header text-xl font-bold text-gray-800">Tuesday</h2>
+                </div>
+                <div class="p-5 flex-grow space-y-4 overflow-y-auto">
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-blue-600 w-16 pt-1">5:00 AM</span>
+                        <div class="text-sm">Op Com Day</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-blue-600 w-16 pt-1">6:00 AM</span>
+                        <div class="text-sm">Sawyer's Study</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-purple-600 w-16 pt-1">7:00 AM</span>
+                        <div class="text-sm font-medium text-purple-700">Family Text</div>
+                    </div>
+                    <div class="flex items-start group">
+                        <span class="font-mono text-xs md:text-sm font-bold text-gray-400 w-16 pt-1">7:30 AM</span>
+                        <div class="text-sm bg-gray-50 group-hover:bg-gray-100 transition-colors rounded px-3 py-1.5 w-full border-l-4 border-gray-300">
+                            Start Work
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-gray-400 w-16 pt-1">5:00 PM</span>
+                        <div class="text-sm text-gray-500 italic">End Work</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wednesday -->
+            <div id="wednesday" class="day-card flex-shrink-0 w-full md:w-auto snap-center bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full md:h-auto">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h2 class="day-header text-xl font-bold text-gray-800">Wednesday</h2>
+                </div>
+                <div class="p-5 flex-grow space-y-4 overflow-y-auto">
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-blue-600 w-16 pt-1">5:00 AM</span>
+                        <div class="text-sm">Meeting Study</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-blue-600 w-16 pt-1">6:00 AM</span>
+                        <div class="text-sm">Weston's Study</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-purple-600 w-16 pt-1">7:00 AM</span>
+                        <div class="text-sm font-medium text-purple-700">Family Text</div>
+                    </div>
+                    <div class="flex items-start group">
+                        <span class="font-mono text-xs md:text-sm font-bold text-gray-400 w-16 pt-1">7:30 AM</span>
+                        <div class="text-sm bg-gray-50 group-hover:bg-gray-100 transition-colors rounded px-3 py-1.5 w-full border-l-4 border-gray-300">
+                            Start Work
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-gray-400 w-16 pt-1">5:00 PM</span>
+                        <div class="text-sm text-gray-500 italic">End Work</div>
+                    </div>
+                    <div class="border-t border-dashed border-gray-200 pt-3 mt-2">
+                        <div class="flex items-start">
+                            <span class="font-mono text-xs md:text-sm font-bold text-indigo-600 w-16 pt-1">7:00 PM</span>
+                            <div class="text-sm font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">Meeting</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thursday -->
+            <div id="thursday" class="day-card flex-shrink-0 w-full md:w-auto snap-center bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full md:h-auto">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h2 class="day-header text-xl font-bold text-gray-800">Thursday</h2>
+                </div>
+                <div class="p-5 flex-grow space-y-4 overflow-y-auto">
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-blue-600 w-16 pt-1">5:00 AM</span>
+                        <div class="text-sm">Service Study Prep & School Prep</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-blue-600 w-16 pt-1">6:00 AM</span>
+                        <div class="text-sm">Brook's Study</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-purple-600 w-16 pt-1">7:00 AM</span>
+                        <div class="text-sm font-medium text-purple-700">Family Text</div>
+                    </div>
+                    <div class="flex items-start group">
+                        <span class="font-mono text-xs md:text-sm font-bold text-gray-400 w-16 pt-1">7:30 AM</span>
+                        <div class="text-sm bg-gray-50 group-hover:bg-gray-100 transition-colors rounded px-3 py-1.5 w-full border-l-4 border-gray-300">
+                            Start Work
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-gray-400 w-16 pt-1">5:00 PM</span>
+                        <div class="text-sm text-gray-500 italic">End Work</div>
+                    </div>
+                    <div class="border-t border-dashed border-gray-200 pt-3 mt-2">
+                        <div class="flex items-start">
+                            <span class="font-mono text-xs md:text-sm font-bold text-green-600 w-16 pt-1">7:00 PM</span>
+                            <div class="text-sm font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded">Family Worship</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Friday -->
+            <div id="friday" class="day-card flex-shrink-0 w-full md:w-auto snap-center bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full md:h-auto">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h2 class="day-header text-xl font-bold text-gray-800">Friday</h2>
+                </div>
+                <div class="p-5 flex-grow space-y-4 overflow-y-auto">
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-blue-600 w-16 pt-1">5:00 AM</span>
+                        <div class="text-sm">Watchtower Study</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-blue-600 w-16 pt-1">6:00 AM</span>
+                        <div class="text-sm">Isaak's Study</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-purple-600 w-16 pt-1">7:00 AM</span>
+                        <div class="text-sm font-medium text-purple-700">Family Text</div>
+                    </div>
+                    <div class="flex items-start mt-4">
+                        <span class="font-mono text-xs md:text-sm font-bold text-orange-500 w-16 pt-1">9:00 AM</span>
+                        <div class="text-sm bg-orange-50 text-orange-800 px-3 py-2 rounded-lg w-full border border-orange-100">
+                            <i class="fas fa-walking mr-1 opacity-75"></i> Service (until 12:00)
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-teal-500 w-16 pt-1">1:00 PM</span>
+                        <div class="text-sm bg-teal-50 text-teal-800 px-3 py-2 rounded-lg w-full border border-teal-100">
+                            <i class="fas fa-school mr-1 opacity-75"></i> School with kids (until 3:30)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saturday -->
+            <div id="saturday" class="day-card flex-shrink-0 w-full md:w-auto snap-center bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full md:h-auto">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h2 class="day-header text-xl font-bold text-gray-800">Saturday</h2>
+                </div>
+                <div class="p-5 flex-grow space-y-4 overflow-y-auto">
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-blue-600 w-16 pt-1">5:00 AM</span>
+                        <div class="text-sm">Talk Preparation</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-blue-600 w-16 pt-1">6:00 AM</span>
+                        <div class="text-sm">Write letter to Hudson</div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="font-mono text-xs md:text-sm font-bold text-purple-600 w-16 pt-1">7:00 AM</span>
+                        <div class="text-sm font-medium text-purple-700">Family Text</div>
+                    </div>
+                    <div class="flex items-start mt-4">
+                        <span class="font-mono text-xs md:text-sm font-bold text-orange-500 w-16 pt-1">9:00 AM</span>
+                        <div class="text-sm bg-orange-50 text-orange-800 px-3 py-2 rounded-lg w-full border border-orange-100">
+                            <i class="fas fa-walking mr-1 opacity-75"></i> Service (until 1:00)
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-100 pt-3 mt-4">
+                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Flexible</div>
+                        <div class="text-sm text-gray-700">Talk Study</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clone: Sunday (Hidden on Desktop) -->
+            <div id="sunday-clone" class="day-card md:hidden flex-shrink-0 w-full snap-center bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h2 class="day-header text-xl font-bold text-gray-800">Sunday</h2>
+                </div>
+                <div class="p-5 flex-grow space-y-4 overflow-y-auto">
+                   <div class="flex items-start pt-8 pb-4 justify-center text-gray-400 italic text-sm">
+                        No morning schedule
+                   </div>
+                    <div class="border-t border-dashed border-gray-200 pt-3 mt-2">
+                        <div class="flex items-start">
+                            <span class="font-mono text-xs md:text-sm font-bold text-indigo-600 w-16 pt-1">1:00 PM</span>
+                            <div class="text-sm font-bold text-indigo-700 bg-indigo-50 px-3 py-2 rounded-lg w-full border border-indigo-100">
+                                Congregation Meeting
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-100 pt-3 mt-4">
+                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Flexible</div>
+                        <div class="text-sm text-gray-700">Personal Study (AH HA!)</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const dayIds = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const container = document.getElementById('schedule-container');
+        
+        let scrollTimeout;
+
+        // 1. Navigation Logic (Clicking Tabs)
+        function scrollToDay(dayId) {
+            const element = document.getElementById(dayId);
+            if (element) {
+                if (window.innerWidth < 768) {
+                    // Smooth scroll on mobile
+                    const containerLeft = container.getBoundingClientRect().left;
+                    const elementLeft = element.getBoundingClientRect().left;
+                    const offset = elementLeft - containerLeft + container.scrollLeft;
+                    
+                    container.scrollTo({
+                        left: offset,
+                        behavior: 'smooth'
+                    });
+                } else {
+                    // Standard scroll on desktop
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        // 2. Infinite Loop Logic (The Revolving Door)
+        function handleInfiniteScroll() {
+            if (window.innerWidth >= 768) return; // Disable on desktop
+
+            const cardWidth = container.offsetWidth; // 1 card = 1 screen width
+            const scrollPos = container.scrollLeft;
+            const index = Math.round(scrollPos / cardWidth);
+
+            // Structure: [Clone Sat] [Sun] [Mon] ... [Sat] [Clone Sun]
+            // Index:         0        1     2    ...   7         8
+            
+            // If at Index 0 (Clone Sat) -> Jump to Index 7 (Real Sat)
+            if (index === 0) {
+                const realSat = document.getElementById('saturday');
+                const offset = realSat.offsetLeft - container.offsetLeft;
+                container.scrollTo({ left: offset, behavior: 'auto' }); // Instant jump
+            }
+            // If at Index 8 (Clone Sun) -> Jump to Index 1 (Real Sun)
+            else if (index === 8) {
+                const realSun = document.getElementById('sunday');
+                const offset = realSun.offsetLeft - container.offsetLeft;
+                container.scrollTo({ left: offset, behavior: 'auto' }); // Instant jump
+            }
+        }
+
+        // 3. Observer Logic (Highlights tab when you swipe)
+        function setupObserver() {
+            const options = {
+                root: container,
+                threshold: 0.6
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        let id = entry.target.id;
+                        // Map clones to real IDs for tab highlighting
+                        if (id === 'saturday-clone') id = 'saturday';
+                        if (id === 'sunday-clone') id = 'sunday';
+                        
+                        updateActiveTab(id);
+                    }
+                });
+            }, options);
+
+            // Observe real days AND clones
+            dayIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) observer.observe(el);
+            });
+            document.getElementById('saturday-clone') && observer.observe(document.getElementById('saturday-clone'));
+            document.getElementById('sunday-clone') && observer.observe(document.getElementById('sunday-clone'));
+        }
+
+        function updateActiveTab(activeId) {
+            dayIds.forEach(id => {
+                const btn = document.getElementById(`tab-${id}`);
+                if (id === activeId) {
+                    btn.classList.remove('tab-inactive');
+                    btn.classList.add('tab-active');
+                    if (window.innerWidth < 768) {
+                        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                } else {
+                    btn.classList.remove('tab-active');
+                    btn.classList.add('tab-inactive');
+                }
+            });
+        }
+
+        // 4. Attach Listeners
+        container.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            // Debounce the infinite scroll check so it happens AFTER the snap settles
+            scrollTimeout = setTimeout(handleInfiniteScroll, 100); 
+        });
+
+        // 5. Initialization
+        function init() {
+            const todayIndex = new Date().getDay();
+            const todayId = dayIds[todayIndex];
+
+            // Setup the scroll observer
+            setupObserver();
+
+            // Highlight desktop card
+            const desktopCard = document.getElementById(todayId);
+            if (desktopCard) {
+                desktopCard.classList.add('current-day-desktop');
+            }
+
+            // Mobile: Scroll to current day immediately
+            if (window.innerWidth < 768) {
+                const element = document.getElementById(todayId);
+                if (element) {
+                    // Timeout ensures layout is ready before scrolling
+                    setTimeout(() => {
+                        const containerLeft = container.getBoundingClientRect().left;
+                        const elementLeft = element.getBoundingClientRect().left;
+                        const offset = elementLeft - containerLeft + container.scrollLeft;
+                        container.scrollTo({ left: offset, behavior: 'auto' });
+                    }, 50);
+                }
+            }
+        }
+
+        // Run Init
+        init();
+    </script>
+</body>
+</html>
+
+
